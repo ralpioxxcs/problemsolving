@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/macballs/Dev/Codeforce_mine/Round#661/main.cpp
+algorithm
+-
+iostream
+-
+string
+-
+vector
+-
+
