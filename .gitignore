@@ -31,4 +31,8 @@
 *.out
 *.app
 
-run/
+# ccls cache dir
+.ccls-cache/
+
+# ccls cache directory all files
+.ccls-cache/*
