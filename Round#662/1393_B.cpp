@@ -7,19 +7,16 @@ int main() {
 #ifdef TEST
   freopen("input.txt", "r", stdin);
 #endif
-  int n, q;    // n : amounts of plank, q : number of events
-  int sl = 0;  // sum of length
-  int count = 0;
+  int n, q;  // n : amounts of plank, q : number of events
   cin >> n;
   vector<int> lop(10001);
+  vector<int> sums(10001);
   int val;
   for (int i = 0; i < n; ++i) {
     cin >> val;
-    if (lop[val] == 0) {
-      count++;
-    }
     lop[val]++;
-    sl++;
+    sums[lop[val]]++;
+    sums[lop[val]-1]--;
   }
   cin >> q;  // number of events
   vector<int> ev(q);
@@ -36,24 +33,26 @@ int main() {
 
   // solve ( q: 10^5 )
   for (int i = 0; i < q; ++i) {
-    if (lop[abs(ev[i])] == 0) {
-      count++;
-    }
     if (ev[i] > 0) {
       lop[abs(ev[i])]++;
-      sl++;
+      sums[lop[abs(ev[i])]]++;
+      sums[lop[abs(ev[i])]-1]--;
     } else {
+      sums[lop[abs(ev[i])]]--;
       lop[abs(ev[i])]--;
-      sl--;
+      sums[lop[abs(ev[i])]]++;
     }
 
-    std::cout << "cur "<<lop[abs(ev[i])]<< std::endl;
-    if (((count * 4) % sl) == 0)
+    for (int i = 1; i <= 8; ++i) {
+      std::cout << "ary ["<<i<<"] : "<<sums[i] << std::endl;
+      
+    }
+    if ((sums[8] >= 1) || (sums[6] >= 1 && sums[2] >= 1) || (sums[4] >= 2) ||
+        (sums[4] >= 1 && sums[2] >= 2)) {
       std::cout << "YES" << std::endl;
-    else if (((sl - lop[abs(ev[i])]) % 8) == 0)
-      std::cout << "YES" << std::endl;
-    else
+    } else {
       std::cout << "NO" << std::endl;
+    }
   }
   return 0;
 }
