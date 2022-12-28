@@ -1,0 +1,5 @@
+v=int(input())
+t=list(str(input()))
+if t.count('A') > t.count('B'): print('A')
+elif t.count('A') == t.count('B'): print('Tie')
+else: print('B')
