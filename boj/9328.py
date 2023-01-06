@@ -1,92 +1,120 @@
-import sys
+from enum import Enum
 
-# input
-h = 0
-w = 0
-floor = []
-visited = []
-keys = []
-
-# runtime
+# move helper
 dx = [0, 0, 1, -1]
 dy = [1, -1, 0, 0]
-paths = []  # discovered
-doors = {}
-docs = 0  # found documents
 
-def solve(startX, startY: int):
-  global docs
+class Space(Enum):
+  EMPTY_SPACE = 1
+  WALL = 2
+  DOCUMENT = 3
+  DOOR = 4
+  KEY = 5
 
-  if floor[startX][startY] == '*':
+def checkRange(x: int, y: int):
+  if x < 0 or x >= width or y < 0 or y >= height:
+    return False
+  return True
+
+def checkSpace(what):
+  if what == '.':
+    return Space.EMPTY_SPACE
+  elif what == '*':
+    return Space.WALL
+  elif what == '$':
+    return Space.DOCUMENT
+  elif 'A' <= what <= 'Z':
+    return Space.DOOR
+  elif 'a' <= what <= 'z':
+    return Space.KEY
+
+
+def solve(y: int, x: int):
+  global documents
+  global doors
+  paths = []  # discovering paths (queue)
+
+  what = floor[y][x]
+  space = checkSpace(what)
+
+  if space == Space.WALL:
     return
-  elif floor[startX][startY] == '$':
-    docs += 1
-    floor[startX][startY] = '.'
-  elif floor[startX][startY].isupper():
-    if floor[startX][startY].lower() in keys:
-      floor[startX][startY] = '.'
+  elif space == Space.DOCUMENT:
+    documents += 1
+    floor[y][x] = '.'
+  elif space == Space.DOOR:
+    if what.lower() in keys:
+      floor[y][x] = '.'
     else:
-      doors[floor[startX][startY]] = {'x': startX, 'y': startY}
+      doors[what].add((x,y))
       return
-  elif floor[startX][startY].islower():
-    if floor[startX][startY].upper() in doors:
-      paths.append({'x': doors[floor[startX][startY].upper()]['x'], 
-                    'y': doors[floor[startX][startY].upper()]['y']})
-    keys.add(floor[startX][startY].lower())
-    floor[x][y] = '.'
-    visited[x][y] = 0
+  elif space == Space.KEY:
+    if what.upper() in doors:
+      for x,y in doors[what.upper()]:
+        paths.append({'x': x, 'y': y})
+    keys.add(floor[y][x].lower())
+    floor[y][x] = '.'
 
-  # discover up,left,right,down
-  paths.append({'x': startX, 'y': startY})
-  while len(paths):
+  paths.append({'x': x, 'y': y})
+
+  while (len(paths)):
     cur = paths.pop()
 
-    if visited[cur['x']][cur['y']]:
+    # 중복 탐색 방지
+    if visited[cur['y']][cur['x']]:
       continue
     else:
-      visited[cur['x']][cur['y']] = 1
+      visited[cur['y']][cur['x']] = 1
 
     for idx in range(4):
-      x = cur['x'] + dx[idx]
-      y = cur['y'] + dy[idx]
-      if x < 0 or x >= h or y < 0 or y >= w:
+      curX = cur['x'] + dx[idx]
+      curY = cur['y'] + dy[idx]
+      if not checkRange(curX, curY):
         continue
-      what = floor[x][y]
-      if what == '.':
-        paths.append({'x': x, 'y': y})
-      elif what == '*':
+
+      # 현재 자리 체크
+      what = floor[curY][curX]
+      space = checkSpace(what)
+      if space == Space.WALL:
         continue
-      elif what == '$':
-        docs += 1
-        floor[x][y] = '.'
-        paths.append({'x': x, 'y': y})
-      elif what.isupper():
+      elif space == Space.DOCUMENT:
+        documents += 1
+        floor[curY][curX] = '.'
+        paths.append({'x': curX, 'y': curY})
+      elif space == Space.DOOR:
+        # 현재 갖고있는 키중에 해당하는 키가 있는지 체크
         if what.lower() in keys:
-          floor[x][y] = '.'
-          visited[x][y] = 0
-          paths.append({'x': x, 'y': y})
+          floor[curY][curX] = '.'
+          visited[curY][curX] = 0
+          paths.append({'x': curX, 'y': curY})
+        # 키를 갖고있지 않으면 열리지 않은 문 리스트에 추가
         else:
-          doors[what] = {'x': x, 'y': y}
-          continue
-      elif what.islower():
+          doors[what].add((curX,curY))
+      elif space == Space.KEY:
         if what.upper() in doors:
-          # 저장해 두었던 door의 좌표 입력
-          paths.append({'x': doors[what.upper()]['x'], 
-                        'y': doors[what.upper()]['y']})
-        keys.add(what.lower())
-        floor[x][y] = '.'
-        visited[x][y] = 0
-        paths.append({'x': x, 'y': y})
+          for x,y in doors[what.upper()]:
+            paths.append({'x': x, 'y': y})
+        keys.add(what)
+        floor[curY][curX] = '.'
+        visited[curY][curX] = 0
+        paths.append({'x': curX, 'y': curY})
+      elif space == Space.EMPTY_SPACE:
+        paths.append({'x': curX, 'y': curY})
 
 for _ in range(int(input())):
-  h, w = map(int, input().split())
-  floor = [list(input()) for _ in range(h)]
+  height, width = map(int, input().split())
+  floor = [list(input()) for _ in range(height)]
   keys = set(input())
-
   visited = [[0 for _ in row] for row in floor]
-  docs = 0
-  for i in range(h):
-    for j in range(w):
-      if (i == 0 or i == h - 1 or j == 0 or j == w - 1):
+  documents = 0
+
+  doors = {}  # 열리지 않은 문 리스트
+  for door in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+    doors.setdefault(door, set()) 
+
+  for i in range(height):
+    for j in range(width):
+      # visit only edge of the map
+      if (i == 0 or i == height - 1 or j == 0 or j == width - 1):
         solve(i, j)
-  print(docs)
+  print(documents)
