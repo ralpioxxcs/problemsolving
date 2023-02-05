@@ -28,7 +28,6 @@ def checkSpace(what):
   elif 'a' <= what <= 'z':
     return Space.KEY
 
-
 def solve(y: int, x: int):
   global documents
   global doors
@@ -112,9 +111,18 @@ for _ in range(int(input())):
   for door in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
     doors.setdefault(door, set()) 
 
+  print(doors)
+  if 'A' in doors:
+    print('hi')
+
+  doors['A'].add((2,3))
+  for x,y in doors['A']:
+    print('t',x,y)
+
   for i in range(height):
     for j in range(width):
       # visit only edge of the map
       if (i == 0 or i == height - 1 or j == 0 or j == width - 1):
         solve(i, j)
+
   print(documents)
